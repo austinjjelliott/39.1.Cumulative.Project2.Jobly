@@ -14,7 +14,6 @@ const companyUpdateSchema = require("../schemas/companyUpdate.json");
 
 const router = new express.Router();
 
-
 /** POST / { company } =>  { company }
  *
  * company should be { handle, name, description, numEmployees, logoUrl }
@@ -28,7 +27,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
-      const errs = validator.errors.map(e => e.stack);
+      const errs = validator.errors.map((e) => e.stack);
       throw new BadRequestError(errs);
     }
 
@@ -52,7 +51,23 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
+    //added: optional query string filters
+    const { name, minEmployees, maxEmployees } = req.query;
+    //next three variables ensure that if they exist, name is a string and employee count is a number
+    const nameParam = name ? name : undefined;
+    const minEmployeesInt = minEmployees
+      ? parseInt(minEmployees, 10)
+      : undefined;
+    const maxEmployeesInt = maxEmployees
+      ? parseInt(maxEmployees, 10)
+      : undefined;
+
+    //Add the optional query string filters to the findAll method
+    const companies = await Company.findAll(
+      nameParam,
+      minEmployeesInt,
+      maxEmployeesInt
+    );
     return res.json({ companies });
   } catch (err) {
     return next(err);
@@ -91,7 +106,7 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
     if (!validator.valid) {
-      const errs = validator.errors.map(e => e.stack);
+      const errs = validator.errors.map((e) => e.stack);
       throw new BadRequestError(errs);
     }
 
@@ -115,6 +130,5 @@ router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
     return next(err);
   }
 });
-
 
 module.exports = router;

@@ -18,26 +18,21 @@ class Company {
 
   static async create({ handle, name, description, numEmployees, logoUrl }) {
     const duplicateCheck = await db.query(
-          `SELECT handle
+      `SELECT handle
            FROM companies
            WHERE handle = $1`,
-        [handle]);
+      [handle]
+    );
 
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${handle}`);
 
     const result = await db.query(
-          `INSERT INTO companies
+      `INSERT INTO companies
            (handle, name, description, num_employees, logo_url)
            VALUES ($1, $2, $3, $4, $5)
            RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
-        [
-          handle,
-          name,
-          description,
-          numEmployees,
-          logoUrl,
-        ],
+      [handle, name, description, numEmployees, logoUrl]
     );
     const company = result.rows[0];
 
@@ -49,15 +44,52 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+  static async findAll(name, minEmployees, maxEmployees) {
+    //Added optional query string parameter filters
+    //Create an array for the query and the optional parameters
+    let query = `SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl" FROM companies`;
+    let filters = [];
+    let values = [];
+
+    //Add name filter if provided:
+    if (name) {
+      filters.push(`name ILIKE $${values.length + 1}`);
+      values.push(`%${name}%`);
+    }
+    //Add min employees if provided:
+    if (minEmployees) {
+      if (isNaN(minEmployees)) {
+        throw new Error("minEmployees must be a number");
+      }
+      filters.push(`num_employees >= $${values.length + 1}`);
+      values.push(minEmployees);
+    }
+    //Add max employees if provided:
+    if (maxEmployees) {
+      if (isNaN(maxEmployees)) {
+        throw new Error("maxEmployees must be a number");
+      }
+      filters.push(`num_employees <= $${values.length + 1}`);
+      values.push(maxEmployees);
+    }
+    // Handle the case where minEmployees > maxEmployees
+    if (minEmployees && maxEmployees && minEmployees > maxEmployees) {
+      throw new Error("MINIMUM employees cannot exceed maximum employees");
+    }
+
+    //Add the WHERE clause to query if filters were provided:
+    if (filters.length > 0) {
+      query += " WHERE " + filters.join(" AND ");
+    }
+    //Add this to all queries, regardless of filters but after filters are applied:
+    query += " ORDER BY name";
+
+    // Log the final query and values for debugging
+    console.log("Executing query:", query);
+    console.log("With values:", values);
+
+    //Execute the Query!
+    const companiesRes = await db.query(query, values);
     return companiesRes.rows;
   }
 
@@ -71,14 +103,15 @@ class Company {
 
   static async get(handle) {
     const companyRes = await db.query(
-          `SELECT handle,
+      `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
            FROM companies
            WHERE handle = $1`,
-        [handle]);
+      [handle]
+    );
 
     const company = companyRes.rows[0];
 
@@ -100,12 +133,10 @@ class Company {
    */
 
   static async update(handle, data) {
-    const { setCols, values } = sqlForPartialUpdate(
-        data,
-        {
-          numEmployees: "num_employees",
-          logoUrl: "logo_url",
-        });
+    const { setCols, values } = sqlForPartialUpdate(data, {
+      numEmployees: "num_employees",
+      logoUrl: "logo_url",
+    });
     const handleVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE companies 
@@ -131,16 +162,16 @@ class Company {
 
   static async remove(handle) {
     const result = await db.query(
-          `DELETE
+      `DELETE
            FROM companies
            WHERE handle = $1
            RETURNING handle`,
-        [handle]);
+      [handle]
+    );
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 }
-
 
 module.exports = Company;
