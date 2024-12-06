@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "default": {},
+  "title": "Root Schema",
+  "required": ["title", "salary", "equity", "company_handle"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "The title Schema",
+      "examples": [
+        "Conservator, furniture",
+        "Information officer",
+        "Consulting civil engineer",
+        "Early years teacher"
+      ]
+    },
+    "salary": {
+      "type": "integer",
+      "title": "The salary Schema",
+      "examples": [110000, 200000, 60000]
+    },
+    "equity": {
+      "type": "number",
+      "title": "The equity Schema",
+      "examples": [0, 1, 0.05]
+    },
+    "company_handle": {
+      "type": "string",
+      "title": "The company_handle Schema",
+      "examples": ["watson-davis", "hall-mills", "sellers-bryant"]
+    }
+  },
+  "examples": [
+    {
+      "title": "Conservator, furniture",
+      "salary": 110000,
+      "equity": 0,
+      "company_handle": "watson-davis"
+    }
+  ]
+}
