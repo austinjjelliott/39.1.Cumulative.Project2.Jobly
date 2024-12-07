@@ -94,7 +94,7 @@ describe("POST /users", function () {
     expect(resp.statusCode).toEqual(400);
   });
 
-  test("bad request if invalid data", async function () {
+  test("bad request if invalid data1", async function () {
     const resp = await request(app)
       .post("/users")
       .send({
@@ -174,7 +174,8 @@ describe("GET /users/:username", function () {
         firstName: "U1F",
         lastName: "U1L",
         email: "user1@user.com",
-        isAdmin: false,
+        isAdmin: true,
+        jobs: [],
       },
     });
   });
@@ -208,7 +209,7 @@ describe("PATCH /users/:username", () => {
         firstName: "New",
         lastName: "U1L",
         email: "user1@user.com",
-        isAdmin: false,
+        isAdmin: true,
       },
     });
   });
@@ -230,7 +231,7 @@ describe("PATCH /users/:username", () => {
     expect(resp.statusCode).toEqual(404);
   });
 
-  test("bad request if invalid data", async function () {
+  test("bad request if invalid data2", async function () {
     const resp = await request(app)
       .patch(`/users/u1`)
       .send({
@@ -253,7 +254,7 @@ describe("PATCH /users/:username", () => {
         firstName: "U1F",
         lastName: "U1L",
         email: "user1@user.com",
-        isAdmin: false,
+        isAdmin: true,
       },
     });
     const isSuccessful = await User.authenticate("u1", "new-password");

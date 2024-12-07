@@ -133,4 +133,34 @@ router.delete(
   }
 );
 
+/** POST /users/:username/jobs/:id
+ *  Allows a user (or admin) to apply for a job.
+ *
+ *  Returns { applied: jobId }
+ *
+ *  Authorization required: login AND admin OR correct user
+ */
+router.post(
+  "/:username/jobs/:id",
+  ensureLoggedIn,
+  ensureCorrectUserOrAdmin,
+  async function (req, res, next) {
+    try {
+      const { username, id: jobId } = req.params;
+      //Ensure job exists
+      const jobCheck = await db.query(`SELECT id FROM jobs WHERE id = $1`, [
+        jobId,
+      ]);
+      if (jobCheck.rows.length === 0) {
+        throw new BadRequestError(`No job exists with id of ${jobId}`);
+      }
+      //If job exists, allow user to apply for it
+      const application = await User.applyForJob(username, jobId);
+      return res.json(application);
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
 module.exports = router;

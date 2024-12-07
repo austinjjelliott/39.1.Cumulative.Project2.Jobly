@@ -16,14 +16,6 @@ beforeEach(commonBeforeEach);
 afterEach(commonAfterEach);
 afterAll(commonAfterAll);
 
-beforeAll(async function () {
-  // Insert test job data into the database before all tests
-  await db.query(`
-    INSERT INTO jobs (id, title, salary, equity, company_handle)
-    VALUES (1, 'Job1', 50000, 0.01, 'c1');
-  `);
-});
-
 /************************************** create */
 describe("create", function () {
   const newJob = {
@@ -65,11 +57,25 @@ describe("findAll", function () {
     let jobs = await Job.findAll();
     expect(jobs).toEqual([
       {
-        id: expect.any(Number),
+        id: expect.any(Number), // This allows for any auto-generated number
         title: "Job1",
-        salary: 50000,
-        equity: "0.01",
+        salary: 100000,
+        equity: "0.1",
         company_handle: "c1",
+      },
+      {
+        id: expect.any(Number),
+        title: "Job2",
+        salary: 80000,
+        equity: "0.2",
+        company_handle: "c1",
+      },
+      {
+        id: expect.any(Number),
+        title: "Job3",
+        salary: 60000,
+        equity: null,
+        company_handle: "c2",
       },
     ]);
   });

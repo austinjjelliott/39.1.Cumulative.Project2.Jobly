@@ -140,6 +140,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: [],
     });
   });
 
@@ -214,8 +215,7 @@ describe("update", function () {
 describe("remove", function () {
   test("works", async function () {
     await User.remove("u1");
-    const res = await db.query(
-        "SELECT * FROM users WHERE username='u1'");
+    const res = await db.query("SELECT * FROM users WHERE username='u1'");
     expect(res.rows.length).toEqual(0);
   });
 
@@ -225,6 +225,23 @@ describe("remove", function () {
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+/************************************** applyForJob */
+describe("applyForJob", function () {
+  test("works", async function () {
+    const res = await User.applyForJob("u1", 1);
+    expect(res).toEqual({ applied: 1 });
+  });
+
+  test("error if already applied", async function () {
+    await User.applyForJob("u1", 1); // Applies once as set up.
+    try {
+      await User.applyForJob("u1", 1); // Re-applying (should cause err)
+      fail();
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
     }
   });
 });
